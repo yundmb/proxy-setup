@@ -1,0 +1,24 @@
+{
+    "name": "proxy-setup",
+    "version": "1.0.0",
+    "description": "Cross-platform system global proxy Settings",
+    "main": "index.js",
+    "scripts": {
+        "test": "node test.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/yundmb/proxy-setup.git"
+    },
+    "keywords": [
+        "system",
+        "proxy",
+        "setting"
+    ],
+    "author": "yundmb",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/yundmb/proxy-setup/issues"
+    },
+    "homepage": "https://github.com/yundmb/proxy-setup#readme"
+}
