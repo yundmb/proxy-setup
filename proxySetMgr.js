@@ -82,4 +82,13 @@ macProxyManager.disableGlobalProxy = () => {
 
 const winProxyManager = {}
 
+winProxyManager.enableGlobalProxy = (ip, port) => {
+    child_process.spawnSync("reg", ["add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "/v", "ProxyServer", "/t", "REG_SZ", "/d", `${ip}:${port}`, "/f"])
+    child_process.spawnSync("reg", ["add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"])
+}
+
+winProxyManager.disableGlobalProxy = () => {
+    child_process.spawnSync("reg", ["add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "0", "/f"])
+}
+
 module.exports = /^win/.test(process.platform) ? winProxyManager : macProxyManager;
