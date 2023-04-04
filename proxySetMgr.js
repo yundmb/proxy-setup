@@ -5,11 +5,14 @@ const child_process = require('child_process');
 const macProxyManager = {};
 macProxyManager.networks = () => {
     const result = child_process.spawnSync("networksetup", ["-listallhardwareports"])
-    const regex = /Device:\s+(\S+)/g;
+    const regex = /Hardware Port: (.+)\nDevice: (.+)\n/g;
     const matches = result.stdout.toLocaleString().matchAll(regex)
     const list = []
     for (const match of matches) {
-        list.push(match[1])
+        list.push({
+            hp: match[1],
+            device: match[2]
+        })
     }
     return list
 }
@@ -17,36 +20,65 @@ macProxyManager.networkMain = () => {
     const result = child_process.spawnSync("route", ["get", "default"])
     const regex = /interface:\s+(\w+)/;
     const match = regex.exec(result.stdout.toLocaleString());
-    return match ? match[1] : ""
+    const int = match ? match[1] : ""
+    for (const intElement of macProxyManager.networks()) {
+        if (intElement.device === int) {
+            return intElement.hp
+        }
+    }
+    return ""
 }
 //自动发现代理
-macProxyManager.automaticDiscoveryAgent = () => {
-
+macProxyManager.automaticDiscoveryAgent = (state = true) => {
+    const result = child_process.spawnSync("networksetup", ["-setproxyautodiscovery", state ? "on" : "off"])
+    return result.stdout.toLocaleString()
 }
 //自动配置代理
-macProxyManager.automaticConfigurationAgent = () => {
-
+macProxyManager.automaticConfigurationAgent = (url) => {
+    const result = child_process.spawnSync("networksetup", ["-setautoproxyurl", url])
+    return result.stdout.toLocaleString()
 }
 //网页代理(HTTP)
-macProxyManager.webAgent = () => {
-
+macProxyManager.webAgent = (ip, port) => {
+    if (!ip || !port) {
+        console.log('failed to set global proxy server.\n ip and port are required.');
+        return;
+    }
+    const network = macProxyManager.networkMain() || "Wi-Fi"
+    const result = child_process.spawnSync("networksetup", ["-setwebproxy", network, ip, port])
+    return result.stdout.toLocaleString()
 }
 //安全网页代理(HTTPS)
-macProxyManager.secureWebAgent = () => {
-
+macProxyManager.secureWebAgent = (ip, port) => {
+    if (!ip || !port) {
+        console.log('failed to set global proxy server.\n ip and port are required.');
+        return;
+    }
+    const network = macProxyManager.networkMain() || "Wi-Fi"
+    const result = child_process.spawnSync("networksetup", ["-setsecurewebproxy", network, ip, port])
+    return result.stdout.toLocaleString()
 }
 //SOCKS代理
-macProxyManager.socksAgent = () => {
-
+macProxyManager.socksAgent = (ip, port) => {
+    if (!ip || !port) {
+        console.log('failed to set global proxy server.\n ip and port are required.');
+        return;
+    }
+    const network = macProxyManager.networkMain() || "Wi-Fi"
+    const result = child_process.spawnSync("networksetup", ["-setsocksfirewallproxy", network, ip, port])
+    return result.stdout.toLocaleString()
 }
-//不包括简单主机名
-macProxyManager.simpleHostNamesAreNotIncluded = () => {
 
-}
-macProxyManager.ignoreSetting = () => {
-
+macProxyManager.enableGlobalProxy = (ip, port) => {
+    macProxyManager.webAgent(ip, port)
+    macProxyManager.secureWebAgent(ip, port)
 }
 
+macProxyManager.disableGlobalProxy = () => {
+    const network = macProxyManager.networkMain() || "Wi-Fi"
+    child_process.spawnSync("networksetup", ["-setwebproxystate", network, "off"])
+    child_process.spawnSync("networksetup", ["-setsecurewebproxystate", network, "off"])
+}
 
 const winProxyManager = {}
 
